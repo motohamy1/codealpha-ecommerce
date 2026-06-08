@@ -1,5 +1,7 @@
-import { userModel } from "../models/userModel.js";
+import { userModel } from "../models/userModel.ts";
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
 
 interface RegisterParams {
     firstName: string;
@@ -22,7 +24,7 @@ export const register = async ({firstName, lastName, email, password}: RegisterP
         password: hashedPassword,
     });
     await newUser.save();
-    return newUser;
+    return generateToken({firstName, lastName, email});
 }
 
 interface LoginParams {
@@ -37,8 +39,12 @@ export const login = async ({ email, password}: LoginParams) => {
     }
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     if (passwordMatch) {
-        return findUser;
+        return generateToken({firstName: findUser.firstName, lastName:findUser.lastName, email: findUser.email});
     }
 
     throw new Error("Incorrect email or password");
+}
+
+const generateToken = (data: any) => {
+    return jwt.sign(data, process.env.JWT_SECRET || "secretkey");
 }

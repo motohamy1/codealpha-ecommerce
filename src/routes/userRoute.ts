@@ -1,9 +1,9 @@
 import express from "express";
 import { Router } from "express";
-import {login, register} from "../services/userService.js";
-const router = Router();
+import {login, register} from "../services/userService.ts";
+const userRouter = Router();
 
-router.post('/register', async (request, response) => {
+userRouter.post('/register', async (request, response) => {
     try {
         const {firstName, lastName, email, password} = request.body;
         const result = await register({firstName, lastName, email, password});
@@ -13,7 +13,7 @@ router.post('/register', async (request, response) => {
     }
 })
 
-router.post('/login', async (request, response) => {
+userRouter.post('/login', async (request, response) => {
     try {
         const {email, password} = request.body;
         const result = await login({email, password});
@@ -24,4 +24,4 @@ router.post('/login', async (request, response) => {
 })
 
 
-export default router;
+export default userRouter;
