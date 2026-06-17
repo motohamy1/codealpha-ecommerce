@@ -12,12 +12,13 @@ productRouter.get('/', async (req, res) => {
 
 productRouter.post('/', async (req, res) => {
     try {
-            const {title, image, price, stock, description} = req.body;
+            const {title, image, price, stock, category, description} = req.body;
             const newProduct = await createProduct({
                 title, 
                 image, 
                 price, 
                 stock, 
+                category, 
                 description});
             res.status(201).send(newProduct);
 

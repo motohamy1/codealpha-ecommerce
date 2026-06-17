@@ -10,15 +10,17 @@ type CreateProductInput = {
     image: string;
     price: number;
     stock: number;
+    category: string;
     description: string;
 }
 
-export const createProduct = async ({title, image, price, stock, description}: CreateProductInput) => {
+export const createProduct = async ({title, image, price, stock, category, description}: CreateProductInput) => {
     const newProduct = new productModel({
         title,
         image,
         price,
         stock,
+        category,
         description,
     });
     await newProduct.save();
