@@ -31,8 +31,7 @@ app.use('/user', userRouter)
 app.use('/product', productRouter)
 app.use('/cart', cartRouter);
 
-console.log('Product route mounted');
-// app.use(express.static(publicDir));
+app.use(express.static(publicDir));
 
 // app.get("/", (req, res) => {
 //   res.sendFile(path.join(publicDir, "index.html"));
