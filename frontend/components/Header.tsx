@@ -15,6 +15,21 @@ export default function Header() {
   const { itemCount, openDrawer } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    setMobileOpen(false);
+    if (href.startsWith("/#") || href.startsWith("#")) {
+      const hash = href.substring(href.indexOf("#"));
+      if (window.location.pathname === "/") {
+        e.preventDefault();
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+          window.history.pushState(null, "", hash);
+        }
+      }
+    }
+  };
+
   const handleSearchClick = () => {
     if (window.location.pathname !== "/") {
       window.location.href = "/#products";
@@ -57,6 +72,7 @@ export default function Header() {
             <a
               key={link.label}
               href={link.href}
+              onClick={(e) => handleNavLinkClick(e, link.href)}
               className="text-sm font-medium text-muted transition-colors hover:text-ink"
             >
               {link.label}
@@ -96,7 +112,7 @@ export default function Header() {
             <a
               key={link.label}
               href={link.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={(e) => handleNavLinkClick(e, link.href)}
               className="block py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
             >
               {link.label}

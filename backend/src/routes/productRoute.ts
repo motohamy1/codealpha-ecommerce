@@ -4,6 +4,7 @@ import path from "path";
 import crypto from "crypto";
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from "../services/productService.ts";
 import { downloadAndSaveImage } from "../services/imageService.ts";
+import { adminMiddleware } from "../middleware/authMiddleware.ts";
 
 const productRouter = Router();
 
@@ -54,7 +55,7 @@ productRouter.get("/", async (req, res) => {
 });
 
 // POST /product - Create a new product
-productRouter.post("/", upload.single("imageFile"), async (req, res) => {
+productRouter.post("/", adminMiddleware, upload.single("imageFile"), async (req, res) => {
   try {
     let { title, image, price, stock, category, description } = req.body;
 
@@ -100,7 +101,7 @@ productRouter.post("/", upload.single("imageFile"), async (req, res) => {
 });
 
 // PUT /product/:id - Update an existing product
-productRouter.put("/:id", upload.single("imageFile"), async (req, res) => {
+productRouter.put("/:id", adminMiddleware, upload.single("imageFile"), async (req, res) => {
   try {
     const { id } = req.params;
     let { title, image, price, stock, category, description } = req.body;
@@ -157,7 +158,7 @@ productRouter.put("/:id", upload.single("imageFile"), async (req, res) => {
 });
 
 // DELETE /product/:id - Delete a product
-productRouter.delete("/:id", async (req, res) => {
+productRouter.delete("/:id", adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     await deleteProduct(id);

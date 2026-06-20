@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import { productModel } from "./models/productModel.ts";
+import { userModel } from "./models/userModel.ts";
+import bcrypt from "bcrypt";
 
 const MONGODB_URI = "mongodb://localhost:27017/ecommerce";
 
@@ -80,6 +82,20 @@ const seedDB = async () => {
 
     const created = await productModel.insertMany(seedProducts);
     console.log(`Successfully seeded ${created.length} products!`);
+
+    await userModel.deleteMany({});
+    console.log("Deleted all users.");
+
+    const hashedAdminPassword = await bcrypt.hash("admin123", 10);
+    const adminUser = new userModel({
+      firstName: "Admin",
+      lastName: "User",
+      email: "admin@luxe.com",
+      password: hashedAdminPassword,
+      role: "admin",
+    });
+    await adminUser.save();
+    console.log("Successfully seeded admin user (admin@luxe.com / admin123)!");
   } catch (error) {
     console.error("Seeding error:", error);
   } finally {

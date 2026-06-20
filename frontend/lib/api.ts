@@ -33,11 +33,38 @@ export async function fetchCart() {
   return res.json();
 }
 
+function getHeaders(isFormData: boolean = false): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("admin_token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
+export async function loginUser(email: string, password: string): Promise<{ token: string }> {
+  const res = await fetch(`${API_URL}/user/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || "Failed to login. Please check credentials.");
+  }
+  return res.json();
+}
+
 export async function createProduct(data: FormData | Partial<Product>): Promise<Product> {
   const isFormData = data instanceof FormData;
   const res = await fetch(`${API_URL}/product`, {
     method: "POST",
-    headers: isFormData ? {} : { "Content-Type": "application/json" },
+    headers: getHeaders(isFormData),
     body: isFormData ? data : JSON.stringify(data),
   });
   if (!res.ok) {
@@ -51,7 +78,7 @@ export async function updateProduct(id: string, data: FormData | Partial<Product
   const isFormData = data instanceof FormData;
   const res = await fetch(`${API_URL}/product/${id}`, {
     method: "PUT",
-    headers: isFormData ? {} : { "Content-Type": "application/json" },
+    headers: getHeaders(isFormData),
     body: isFormData ? data : JSON.stringify(data),
   });
   if (!res.ok) {
@@ -64,6 +91,7 @@ export async function updateProduct(id: string, data: FormData | Partial<Product
 export async function deleteProduct(id: string): Promise<{ message: string }> {
   const res = await fetch(`${API_URL}/product/${id}`, {
     method: "DELETE",
+    headers: getHeaders(false),
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));

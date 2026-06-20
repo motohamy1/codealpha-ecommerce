@@ -42,9 +42,9 @@ export default function ProductCard({
   const outOfStock = stock !== undefined && stock === 0;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white transition-all duration-300 hover:shadow-lg hover:shadow-stone-200/50 hover:-translate-y-0.5">
-      {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
+    <article className="group flex h-full flex-col overflow-hidden bg-white transition-all duration-200 hover:ring-2 hover:ring-ink hover:z-10 relative">
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-stone-50 border-b border-border">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -53,24 +53,24 @@ export default function ProductCard({
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200">
-            <ShoppingBag className="h-10 w-10 text-stone-400" />
+          <div className="flex h-full w-full items-center justify-center bg-stone-100">
+            <ShoppingBag className="h-8 w-8 text-stone-400" />
           </div>
         )}
 
         {/* Category badge */}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink backdrop-blur-sm">
+        <span className="absolute left-3 top-3 rounded-[2px] bg-white border border-border px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest text-ink uppercase">
           {category}
         </span>
 
         {/* Stock badge */}
         {outOfStock && (
-          <span className="absolute right-3 top-3 rounded-full bg-stone-900/90 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+          <span className="absolute right-3 top-3 rounded-[2px] bg-ink border border-ink px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest text-white uppercase">
             Sold out
           </span>
         )}
         {lowStock && !outOfStock && (
-          <span className="absolute right-3 top-3 rounded-full bg-orange-500/90 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+          <span className="absolute right-3 top-3 rounded-[2px] bg-white border border-orange-500 px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest text-orange-600 uppercase">
             Only {stock} left
           </span>
         )}
@@ -78,39 +78,41 @@ export default function ProductCard({
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-base font-semibold leading-snug text-ink line-clamp-2">
+        <span className="text-[10px] font-mono tracking-widest text-muted uppercase">
+          {category}
+        </span>
+        <h3 className="mt-1 text-base font-semibold leading-tight text-ink uppercase tracking-tight line-clamp-2 min-h-[2.5rem]">
           {title}
         </h3>
-        <p className="mt-1 text-sm text-muted">{category}</p>
 
-        <div className="mt-auto flex items-center justify-between pt-4">
-          <span className="text-lg font-bold text-ink">
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-stone-100">
+          <span className="text-lg font-bold text-ink tracking-tight">
             ${price.toFixed(2)}
           </span>
 
           <button
             onClick={handleAddToCart}
             disabled={adding || outOfStock}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-[2px] px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
               outOfStock
-                ? "cursor-not-allowed bg-stone-100 text-stone-400"
+                ? "cursor-not-allowed bg-stone-100 text-stone-400 border border-border"
                 : added
-                  ? "bg-green-600 text-white"
-                  : "bg-ink text-white hover:shadow-md hover:shadow-ink/20"
+                  ? "bg-stone-500 text-white"
+                  : "bg-ink text-white hover:bg-stone-700"
             }`}
           >
             {outOfStock ? (
               "Sold out"
             ) : added ? (
               <>
-                <Check className="h-4 w-4" />
+                <Check className="h-3.5 w-3.5" />
                 Added
               </>
             ) : adding ? (
               "Adding…"
             ) : (
               <>
-                <ShoppingBag className="h-4 w-4" />
+                <ShoppingBag className="h-3.5 w-3.5" />
                 Add
               </>
             )}

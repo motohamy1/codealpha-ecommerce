@@ -2,39 +2,60 @@ import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-white">
-      {/* Decorative gradient orbs */}
-      <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-orange-100/40 blur-3xl" />
-      <div className="pointer-events-none absolute -left-32 top-40 h-80 w-80 rounded-full bg-stone-200/30 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
-        <div className="max-w-2xl">
-          <p className="mb-4 text-sm font-medium uppercase tracking-widest text-muted animate-fade-up">
-            New Collection 2026
+    <section className="grid grid-cols-1 lg:grid-cols-12 border-b border-border bg-white">
+      {/* Left Column: Brand Editorial Copy & Call to Action */}
+      <div className="lg:col-span-7 p-8 sm:p-16 lg:p-24 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border min-h-[500px] lg:min-h-[600px]">
+        <div className="max-w-xl animate-fade-up">
+          <p className="mb-6 text-xs font-bold uppercase tracking-[0.25em] text-muted">
+            [ COLLECTION 2026 ]
           </p>
-          <h1 className="text-5xl font-bold leading-[1.05] text-ink sm:text-6xl lg:text-7xl animate-fade-up stagger-1">
-            Quality you can
+          <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl font-bold leading-[0.9] text-ink tracking-tight uppercase">
+            Quality
             <br />
-            <span className="text-stone-400">feel.</span>
+            You Can
+            <br />
+            <span className="text-muted">Feel.</span>
           </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted animate-fade-up stagger-2">
-            Discover curated premium products from independent makers.
-            Thoughtfully designed, ethically sourced, delivered to your door.
+          <p className="mt-8 text-base leading-relaxed text-muted max-w-md">
+            Discover curated premium products from independent makers. 
+            Bespoke craftsmanship, stark functionality, and raw aesthetic focus.
           </p>
-          <div className="mt-10 flex items-center gap-4 animate-fade-up stagger-3">
+          <div className="mt-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <a
               href="#products"
-              className="group inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-ink/20"
+              className="group inline-flex items-center justify-center gap-2 rounded-[2px] bg-ink px-8 py-4 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-stone-700"
             >
               Shop Collection
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
               href="#about"
-              className="text-sm font-semibold text-ink underline-offset-4 hover:underline"
+              className="inline-flex items-center justify-center px-8 py-4 text-xs font-bold uppercase tracking-widest text-ink hover:text-stone-600 transition-colors border border-transparent hover:border-border rounded-[2px]"
             >
               Learn more
             </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: The Exposed Gallery Frame */}
+      <div className="lg:col-span-5 p-8 sm:p-16 lg:p-20 bg-canvas flex flex-col items-center justify-center min-h-[400px] lg:min-h-[600px]">
+        <div className="w-full max-w-sm flex flex-col animate-fade-up stagger-1">
+          {/* Stark 1px border box representing the art frame */}
+          <div className="border border-border bg-white p-4 rounded-[4px]">
+            <div className="relative aspect-[4/5] overflow-hidden bg-stone-50 border border-border">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/luxe_hero_product.png"
+                alt="Featured Stark Black Leather Bag"
+                className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+            </div>
+          </div>
+          {/* Exposed brutalist image caption */}
+          <div className="mt-4 flex items-center justify-between text-[10px] font-mono tracking-widest text-muted uppercase px-1">
+            <span>ART. NO. 2026-001</span>
+            <span>[ STARK LIFESTYLE ]</span>
           </div>
         </div>
       </div>

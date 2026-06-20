@@ -8,9 +8,10 @@ interface RegisterParams {
     lastName: string;
     email: string;
     password: string;
+    role?: "user" | "admin";
 }
 
-export const register = async ({firstName, lastName, email, password}: RegisterParams) => {
+export const register = async ({firstName, lastName, email, password, role}: RegisterParams) => {
     const findUser = await userModel.findOne({ email });
     if (findUser) {
         throw new Error("User already exists");
@@ -22,9 +23,10 @@ export const register = async ({firstName, lastName, email, password}: RegisterP
         lastName,
         email,
         password: hashedPassword,
+        role: role || "user"
     });
     await newUser.save();
-    return generateToken({firstName, lastName, email});
+    return generateToken({firstName, lastName, email, role: newUser.role});
 }
 
 interface LoginParams {
@@ -39,7 +41,12 @@ export const login = async ({ email, password}: LoginParams) => {
     }
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     if (passwordMatch) {
-        return generateToken({firstName: findUser.firstName, lastName:findUser.lastName, email: findUser.email});
+        return generateToken({
+            firstName: findUser.firstName,
+            lastName: findUser.lastName,
+            email: findUser.email,
+            role: findUser.role
+        });
     }
 
     throw new Error("Incorrect email or password");

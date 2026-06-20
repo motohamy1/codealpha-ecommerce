@@ -11,18 +11,27 @@ import {
   Check,
   X,
   RefreshCw,
+  Loader2,
   FileImage,
   Package,
   ArrowLeft,
   Image as ImageIcon,
 } from "lucide-react";
-import { fetchProducts, createProduct, updateProduct, deleteProduct } from "../../lib/api";
+import { fetchProducts, createProduct, updateProduct, deleteProduct, loginUser } from "../../lib/api";
 import type { Product } from "../../lib/types";
 
 export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [adminName, setAdminName] = useState("");
 
   // Form State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -41,10 +50,83 @@ export default function AdminDashboard() {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
-  // Fetch products on mount
+  // Check auth on mount
   useEffect(() => {
-    loadProducts();
+    checkAuth();
   }, []);
+
+  const checkAuth = () => {
+    const token = localStorage.getItem("admin_token");
+    if (!token) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        throw new Error("Invalid token format");
+      }
+      const payload = JSON.parse(atob(parts[1]));
+      
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        throw new Error("Token expired");
+      }
+      
+      if (payload.role !== "admin") {
+        throw new Error("Not an admin");
+      }
+      
+      setAdminName(`${payload.firstName} ${payload.lastName}`);
+      setIsAuthenticated(true);
+      loadProducts();
+    } catch (err) {
+      localStorage.removeItem("admin_token");
+      setIsAuthenticated(false);
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_token");
+    setIsAuthenticated(false);
+    setProducts([]);
+    setAdminName("");
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    setLoginError(null);
+    try {
+      const response = await loginUser(loginEmail, loginPassword);
+      const token = response.token;
+      
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        throw new Error("Received an invalid token from the server.");
+      }
+      const payload = JSON.parse(atob(parts[1]));
+      if (payload.role !== "admin") {
+        throw new Error("Access denied. Only administrators are allowed to access this panel.");
+      }
+      
+      localStorage.setItem("admin_token", token);
+      setAdminName(`${payload.firstName} ${payload.lastName}`);
+      setIsAuthenticated(true);
+      
+      setLoading(true);
+      const data = await fetchProducts();
+      setProducts(data);
+      setError(null);
+      setLoading(false);
+    } catch (err: any) {
+      setLoginError(err.message);
+    } finally {
+      setLoggingIn(false);
+    }
+  };
 
   const loadProducts = () => {
     setLoading(true);
@@ -53,7 +135,12 @@ export default function AdminDashboard() {
         setProducts(data);
         setError(null);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        setError(err.message);
+        if (err.message.toLowerCase().includes("denied") || err.message.toLowerCase().includes("token") || err.message.toLowerCase().includes("unauthorized")) {
+          handleLogout();
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -85,12 +172,11 @@ export default function AdminDashboard() {
     setStock(product.stock !== undefined ? product.stock.toString() : "0");
     setDescription(product.description || "");
     
-    // Determine image type based on its format
     if (product.image.startsWith("http") && !product.image.includes("localhost:5000/uploads/")) {
       setImageType("url");
       setImageUrl(product.image);
     } else {
-      setImageType("url"); // Edit keeps URL representation of local file as default
+      setImageType("url");
       setImageUrl(product.image);
     }
     setPreviewUrl(product.image);
@@ -122,10 +208,12 @@ export default function AdminDashboard() {
       if (editingProduct?.id === id) {
         resetForm();
       }
-      // Temporary success toast
       alert("Product deleted successfully");
     } catch (err: any) {
       alert(`Error deleting product: ${err.message}`);
+      if (err.message.toLowerCase().includes("denied") || err.message.toLowerCase().includes("token") || err.message.toLowerCase().includes("unauthorized")) {
+        handleLogout();
+      }
     }
   };
 
@@ -141,7 +229,6 @@ export default function AdminDashboard() {
       if (isNaN(Number(price)) || Number(price) <= 0) throw new Error("Price must be a positive number.");
       if (isNaN(Number(stock)) || Number(stock) < 0) throw new Error("Stock cannot be negative.");
 
-      // Create FormData if we have a file upload, otherwise use JSON
       let data: FormData | Partial<Product>;
       
       if (imageType === "file" && imageFile) {
@@ -169,13 +256,11 @@ export default function AdminDashboard() {
       }
 
       if (editingProduct) {
-        // Update product
         const updated = await updateProduct(editingProduct.id!, data);
         setProducts(products.map((p) => (p.id === editingProduct.id ? updated : p)));
         setFormSuccess("Product updated successfully!");
         resetForm();
       } else {
-        // Create product
         const created = await createProduct(data);
         setProducts([created, ...products]);
         setFormSuccess("Product added successfully!");
@@ -183,13 +268,110 @@ export default function AdminDashboard() {
       }
     } catch (err: any) {
       setFormError(err.message);
+      if (err.message.toLowerCase().includes("denied") || err.message.toLowerCase().includes("token") || err.message.toLowerCase().includes("unauthorized")) {
+        setTimeout(() => handleLogout(), 2000);
+      }
     } finally {
       setSaving(false);
     }
   };
 
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-canvas">
+        <Loader2 className="h-10 w-10 animate-spin text-stone-400" />
+        <p className="mt-3 text-sm text-muted animate-pulse">Verifying credentials...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-[75vh] items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-canvas">
+        <div className="w-full max-w-md space-y-8 rounded-3xl border border-border bg-white p-8 shadow-xl shadow-stone-100/50">
+          <div className="text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-stone-900 text-white">
+              <Package className="h-6 w-6" />
+            </div>
+            <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-ink">
+              Admin Access
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Please sign in to manage catalog and products.
+            </p>
+          </div>
+          
+          {loginError && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-red-50 p-4 text-sm text-red-800 animate-in fade-in slide-in-from-top-1 duration-200">
+              <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+              <div>
+                <p className="font-semibold">Authentication Failed</p>
+                <p className="mt-0.5 text-red-700 leading-relaxed">{loginError}</p>
+              </div>
+            </div>
+          )}
+
+          <form className="mt-8 space-y-6" onSubmit={handleLoginSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="admin@luxe.com"
+                  className="mt-2 w-full rounded-xl border border-border bg-stone-50 px-4 py-3 text-sm text-ink transition-colors focus:border-ink focus:bg-white focus:outline-none focus:ring-1 focus:ring-ink"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-2 w-full rounded-xl border border-border bg-stone-50 px-4 py-3 text-sm text-ink transition-colors focus:border-ink focus:bg-white focus:outline-none focus:ring-1 focus:ring-ink"
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="group relative flex w-full justify-center rounded-full bg-stone-900 py-3.5 text-sm font-semibold text-white transition-all hover:bg-stone-800 hover:shadow-lg hover:shadow-stone-900/10 focus:outline-none focus:ring-2 focus:ring-stone-500 disabled:cursor-not-allowed disabled:bg-stone-400"
+              >
+                {loggingIn ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </div>
+          </form>
+          
+          <div className="text-center border-t border-border pt-6">
+            <a
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Storefront
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 animate-in fade-in duration-300">
       {/* Header */}
       <div className="mb-10 flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-center">
         <div>
@@ -202,15 +384,23 @@ export default function AdminDashboard() {
           </a>
           <h1 className="text-3xl font-bold text-ink">Catalog Management</h1>
           <p className="mt-1 text-sm text-muted">
-            Create, update, and manage your inventory and product images.
+            Logged in as <span className="font-semibold text-stone-700">{adminName || "Administrator"}</span>. Create, update, and manage your inventory and product images.
           </p>
         </div>
-        {!loading && (
-          <div className="flex h-11 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-semibold text-ink">
-            <Package className="h-4.5 w-4.5 text-stone-400" />
-            <span>{products.length} Products</span>
-          </div>
-        )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          {!loading && (
+            <div className="flex h-11 items-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-semibold text-ink">
+              <Package className="h-4.5 w-4.5 text-stone-400" />
+              <span>{products.length} Products</span>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex h-11 items-center justify-center rounded-full border border-red-200 bg-red-50/50 px-5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 hover:text-red-800"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
