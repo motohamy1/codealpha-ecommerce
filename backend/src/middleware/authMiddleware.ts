@@ -19,6 +19,11 @@ export const adminMiddleware = (req: AuthenticatedRequest, res: Response, next: 
   }
 
   const token = authHeader.split(" ")[1];
+  if (!token) {
+    res.status(401).json({ error: "Access denied. Invalid token format." });
+    return;
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey") as any;
     if (decoded.role !== "admin") {

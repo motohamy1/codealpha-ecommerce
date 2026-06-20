@@ -40,7 +40,7 @@ productRouter.get("/", async (req, res) => {
     const protocol = req.protocol;
 
     const mappedProducts = products.map((p) => {
-      const obj = p.toObject();
+      const obj = p.toObject() as any;
       if (obj.image && obj.image.startsWith("/")) {
         obj.image = `${protocol}://${host}${obj.image}`;
       }
@@ -88,7 +88,7 @@ productRouter.post("/", adminMiddleware, upload.single("imageFile"), async (req,
       description: description || "",
     });
 
-    const obj = newProduct.toObject();
+    const obj = newProduct.toObject() as any;
     if (obj.image && obj.image.startsWith("/")) {
       obj.image = `${req.protocol}://${req.get("host")}${obj.image}`;
     }
@@ -103,7 +103,7 @@ productRouter.post("/", adminMiddleware, upload.single("imageFile"), async (req,
 // PUT /product/:id - Update an existing product
 productRouter.put("/:id", adminMiddleware, upload.single("imageFile"), async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     let { title, image, price, stock, category, description } = req.body;
 
     const updates: any = {};
@@ -145,7 +145,7 @@ productRouter.put("/:id", adminMiddleware, upload.single("imageFile"), async (re
 
     const updatedProduct = await updateProduct(id, updates);
 
-    const obj = updatedProduct.toObject();
+    const obj = updatedProduct.toObject() as any;
     if (obj.image && obj.image.startsWith("/")) {
       obj.image = `${req.protocol}://${req.get("host")}${obj.image}`;
     }
@@ -160,7 +160,7 @@ productRouter.put("/:id", adminMiddleware, upload.single("imageFile"), async (re
 // DELETE /product/:id - Delete a product
 productRouter.delete("/:id", adminMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await deleteProduct(id);
     res.send({ message: "Product deleted successfully" });
   } catch (error: any) {
