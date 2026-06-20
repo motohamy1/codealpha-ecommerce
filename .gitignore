@@ -11,6 +11,7 @@ out/
 dist/
 .vercel
 .turbo
+frontend/.next/
 
 # production
 build/
